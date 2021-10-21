@@ -12,6 +12,24 @@ COLLOQUIAL_PEOPLE_AWARDS = ['cecil b. demille award', 'best actress in a motion 
 MOVIE_AWARDS = ['best motion picture - drama', 'best motion picture - comedy or musical', 'best animated feature film', 'best foreign language film', 'best original score - motion picture']
 TV_AWARDS = ['best television series - drama', 'best television series - comedy or musical', 'best mini-series or motion picture made for television']
 SONG_AWARDS = ['best original song - motion picture']
+STOPWORDS = ['performance', 'by', 'an', 'in', 'a', 'or', '-', 'made', 'for']
+# take award names, remove stopwords such as "performance, by, an, in, a, or" and try to find the other words in tweets
+# split resulting award name, look for all words individually in the tweet
+# give allowance of one word
+
+def process_awards():
+    cleaned_awards = []
+    for award in OFFICIAL_AWARDS_1315:
+        split = award.split()
+        new_word = []
+        for word in split:
+            if word not in STOPWORDS:
+                new_word.append(word)
+                if word == 'television':
+                    new_word.append('tv')
+        cleaned_awards.append(new_word)
+
+    print(cleaned_awards)
 
 def movie_awards():
     potential_drama = []
@@ -208,7 +226,8 @@ def song_awards():
     print(winners)
 
 if __name__ == '__main__':
-    movie_awards()
-    people_awards()
-    tv_awards()
-    song_awards()
+    process_awards()
+    # movie_awards()
+    # people_awards()
+    # tv_awards()
+    # song_awards()
