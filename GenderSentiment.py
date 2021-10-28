@@ -74,6 +74,22 @@ def gender_count():
             print("So in general, tweets about female categories are generally more positive, with more variance in sentiment as well")
         else:
             print("So in general, tweets about female categories are generally more positive, with less variance in sentiment")
+            
+def clean_json():
+    textfile = open("clean_actor_and_actress_only.txt", "w")
 
+    f = open('gg2015.json')
+    data = json.load(f)
+
+    for tweet in data:
+        text = tweet['text']
+        if "RT @" in text or 'best' not in text.lower():
+            continue
+        if 'actor' not in text.lower() and 'actress' not in text.lower():
+            continue
+        textfile.write(text + "\n")
+
+    textfile.close()
+            
 if __name__ == '__main__':
     gender_count()
