@@ -7,6 +7,10 @@ from statistics import mode
 OFFICIAL_AWARDS_1315 = ['cecil b. demille award', 'best motion picture - drama', 'best performance by an actress in a motion picture - drama', 'best performance by an actor in a motion picture - drama', 'best motion picture - comedy or musical', 'best performance by an actress in a motion picture - comedy or musical', 'best performance by an actor in a motion picture - comedy or musical', 'best animated feature film', 'best foreign language film', 'best performance by an actress in a supporting role in a motion picture', 'best performance by an actor in a supporting role in a motion picture', 'best director - motion picture', 'best screenplay - motion picture', 'best original score - motion picture', 'best original song - motion picture', 'best television series - drama', 'best performance by an actress in a television series - drama', 'best performance by an actor in a television series - drama', 'best television series - comedy or musical', 'best performance by an actress in a television series - comedy or musical', 'best performance by an actor in a television series - comedy or musical', 'best mini-series or motion picture made for television', 'best performance by an actress in a mini-series or motion picture made for television', 'best performance by an actor in a mini-series or motion picture made for television', 'best performance by an actress in a supporting role in a series, mini-series or motion picture made for television', 'best performance by an actor in a supporting role in a series, mini-series or motion picture made for television']
 OFFICIAL_AWARDS_1819 = ['best motion picture - drama', 'best motion picture - musical or comedy', 'best performance by an actress in a motion picture - drama', 'best performance by an actor in a motion picture - drama', 'best performance by an actress in a motion picture - musical or comedy', 'best performance by an actor in a motion picture - musical or comedy', 'best performance by an actress in a supporting role in any motion picture', 'best performance by an actor in a supporting role in any motion picture', 'best director - motion picture', 'best screenplay - motion picture', 'best motion picture - animated', 'best motion picture - foreign language', 'best original score - motion picture', 'best original song - motion picture', 'best television series - drama', 'best television series - musical or comedy', 'best television limited series or motion picture made for television', 'best performance by an actress in a limited series or a motion picture made for television', 'best performance by an actor in a limited series or a motion picture made for television', 'best performance by an actress in a television series - drama', 'best performance by an actor in a television series - drama', 'best performance by an actress in a television series - musical or comedy', 'best performance by an actor in a television series - musical or comedy', 'best performance by an actress in a supporting role in a series, limited series or motion picture made for television', 'best performance by an actor in a supporting role in a series, limited series or motion picture made for television', 'cecil b. demille award']
 STOPWORDS = ['performance', 'by', 'an', 'in', 'a', 'or', '-', 'made', 'for', 'any']
+AWARD_STOPWORDS = {'!', '.', '?', ':', 'wins', 'did', 'didn', 'do', 'does', 'has', 'won', 'about', 'glasses', 'vine',
+             'comeback', 'facial', 'speech', 'female', 'the', 'guy', 'male', 'costume', 'dress', 'social', 'biggest',
+             '#', 'worst', 'golden', 'globe', 'presenter', 'most', 'joke', '"', 'about', 'giving', 'this', 'not', 'before',
+             'which', 'twitter', 'my', 'his', 'her', 'at', 'and', 'journey', 'stacked', 'maybe', 'oscar'}
 
 def get_hosts(year):
     '''Hosts is a list of one or more strings. Do NOT change the name
@@ -18,6 +22,53 @@ def get_awards(year):
     '''Awards is a list of strings. Do NOT change the name
     of this function or what it returns.'''
     # Your code here
+    f = open('gg2015.json')
+    data = json.load(f)
+
+    final_award_names = set()
+    goes_to = []
+
+    for tweet in data:
+        text = tweet['text']
+        text = text.lower()
+        if "wins the golden globe for" in text:
+            result = re.search('wins the golden globe for (.*) for', text)
+            if result is None:
+                continue
+            if any(word in AWARD_STOPWORDS for word in result.group(1).split()) or len(result.group(1).split()) < 3:
+                continue
+            final_award_names.add(result.group(1))
+
+        elif "goes to" in text:
+            result = re.search('the golden globe for (.*) goes to', text)
+            if result is None:
+                continue
+            if any(word in AWARD_STOPWORDS for word in result.group(1).split()) or len(result.group(1).split()) < 3:
+                continue
+            goes_to.append(result.group(1))
+
+    award_list = list(final_award_names)
+    award_list_temp = list(final_award_names)
+
+    for award in award_list:
+        award_list_temp.remove(award)
+        if any(award in s for s in award_list_temp):
+            final_award_names.remove(award)
+
+    award_list = list(final_award_names)
+
+    goes_to.sort()
+    c = Counter(goes_to)
+    for common in c.most_common():
+        if common[1] > 1:
+            if any(common[0] in s for s in award_list):
+                continue
+            final_award_names.add(str(common[0]))
+        if len(final_award_names) >= 26:
+            break
+
+    awards = list(final_award_names)
+
     return awards
 
 def get_nominees(year):
