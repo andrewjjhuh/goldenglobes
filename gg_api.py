@@ -155,6 +155,20 @@ def pre_ceremony():
         if "RT @" in text or 'actor' in text.lower() or 'actress' in text.lower() or 'wins' not in text.lower():
             continue
         textfile.write(text + "\n")
+        
+    textfile.close()
+    
+    textfile = open("clean_actor_and_actress_only.txt", "w")
+
+    for tweet in data:
+        text = tweet['text']
+        if "RT @" in text or 'best' not in text.lower():
+            continue
+        if 'actor' not in text.lower() and 'actress' not in text.lower():
+            continue
+        textfile.write(text + "\n")
+
+    textfile.close()
 
     print("Pre-ceremony processing complete.")
     return
