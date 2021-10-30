@@ -92,6 +92,9 @@ def get_winner(year):
 
     cleaned_awards = []
 
+    positivity = []
+    controversy = []
+
     for award in award_names:  # Splits and cleans the award names for processing
         split = award.split()
         new_word = []
@@ -109,23 +112,39 @@ def get_winner(year):
         if 'television' in award:  # Can give additional allowance for television, since we included tv as well
             measure = measure - 1
         if 'cecil' in award or 'actress' in award or 'actor' in award or 'screenplay' in award or 'director' in award:
-            flag = find_winner_people(measure, award, winner_list)  # These words indicate the award is to a person
+            flag = find_winner_people(measure, award, winner_list, positivity, controversy)  # These words indicate the award is to a person
             while flag is False:
                 measure = measure-1
-                flag = find_winner_people(measure, award, winner_list)  # Search until we find a result
+                flag = find_winner_people(measure, award, winner_list, positivity, controversy)  # Search until we find a result
         else:
-            flag = find_winner_general(measure, award, winner_list)  # Non-person awards are under a separate function
+            flag = find_winner_general(measure, award, winner_list, positivity, controversy)  # Non-person awards are under a separate function
             while flag is False:
                 measure = measure - 1
-                flag = find_winner_general(measure, award, winner_list)
+                flag = find_winner_general(measure, award, winner_list, positivity, controversy)
 
     for award, winner in zip(award_names, winner_list):
         winners[award] = winner
 
+    max_positivity = max(positivity)
+    min_positivity = min(positivity)
+    max_controversy = max(controversy)
+
+    index_positivity = positivity.index(max_positivity)
+    index_negativity = positivity.index(min_positivity)
+    index_controversy = controversy.index(max_controversy)
+
+    print("The most positive reaction to a win was to the award " + award_names[index_positivity] + ", winner: " + winner_list[index_positivity])
+    print("The most negative reaction to a win was to the award " + award_names[index_negativity] + ", winner: " + winner_list[index_negativity])
+    print("The award that genereated the most controversy was " + award_names[index_controversy] + ", winner: " + winner_list[index_controversy])
+
     return winners
 
-def find_winner_people(measure, award_name, winners_people):
+def find_winner_people(measure, award_name, winners_people, positivity, controversy):
     potential_winners = []
+
+    compound_scores = []
+    analyzer = SentimentIntensityAnalyzer()
+
     nlp = spacy.load("en_core_web_sm")
     with open('clean_person_entities.txt') as f:
         for text in f:
@@ -138,18 +157,26 @@ def find_winner_people(measure, award_name, winners_people):
                 for entity in doc.ents:  # Searching for person-entities, usually winner is mentioned most with award
                     if entity.label_ == 'PERSON' and 'Best' not in entity.text and '#' not in entity.text:
                         potential_winners.append(entity.text)
+                        score = analyzer.polarity_scores(text)
+                        compound_scores.append(score['compound'])
         if potential_winners:
             person_check = []
             for people in potential_winners:
                 if len(people.split()) > 1:
                     person_check.append(people)
             winners_people.append(mode(person_check))  # Append the most common person associated with award
+            positivity.append(sum(compound_scores)/len(compound_scores))
+            controversy.append(np.var(compound_scores))
             return True
         else:
             return False
 
-def find_winner_general(measure, award_name, winners):
+def find_winner_general(measure, award_name, winners, positivity, controversy):
     potential_winners = []
+
+    compound_scores = []
+    analyzer = SentimentIntensityAnalyzer()
+
     with open('clean_non_person_entities.txt') as f:
         for text in f:
             count = 0
@@ -164,8 +191,12 @@ def find_winner_general(measure, award_name, winners):
                         if len(candidate.split()) < 7:  # Don't want long strings making their way into winners
                             clean = candidate.translate(str.maketrans('', '', string.punctuation))
                             potential_winners.append(clean.title().strip())  # Format it back into a title
+                            score = analyzer.polarity_scores(text)
+                            compound_scores.append(score['compound'])
         if potential_winners:
             winners.append(mode(potential_winners))  # Append the most common thing associated with award
+            positivity.append(sum(compound_scores) / len(compound_scores))
+            controversy.append(np.var(compound_scores))
             return True
         else:
             return False
