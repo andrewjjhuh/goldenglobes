@@ -135,7 +135,7 @@ def get_winner(year):
 
     print("The most positive reaction to a win was to the award " + award_names[index_positivity] + ", winner: " + winner_list[index_positivity])
     print("The most negative reaction to a win was to the award " + award_names[index_negativity] + ", winner: " + winner_list[index_negativity])
-    print("The award that genereated the most controversy was " + award_names[index_controversy] + ", winner: " + winner_list[index_controversy])
+    print("The award that generated the most controversy was " + award_names[index_controversy] + ", winner: " + winner_list[index_controversy])
 
     return winners
 
